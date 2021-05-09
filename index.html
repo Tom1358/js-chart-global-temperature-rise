@@ -7,6 +7,27 @@
     <title>Document</title>
 </head>
 <body>
-    
+    <script>
+        // data from https://data.giss.nasa.gov/gistemp/
+
+        // THIS IS GETTING RAW DATA FROM A CSV FILE TO THE CONSOLE - GLOBAL YEARS/ TMEPERATURES FROM 1880 - 2020
+
+        getData();  // calling the function which is written below
+
+        async function getData() { //asynchronous function making asynchronous calls with the await keyword
+            const response = await fetch('/nasa_info.csv');
+            const data = await response.text();
+
+            const table = data.split('\n').slice(1); //data is split by line break, then slice deletes zero element and gives a copy of array from index 1 to the end
+            table.forEach(row => { 
+                // forEach is a function that allows the application of something to every element of the array; each element of array represented by the term 'row'
+                // would have also worked with for(let i=0; i<rows.length; i++) ...
+                const columns = row.split(','); // for each row, splitting up by commas
+                const year = columns[0]; // just selects year column
+                const temp = columns[1]; // just selects temperature column
+                console.log(year, temp);
+            })
+        }
+    </script>
 </body>
 </html>
