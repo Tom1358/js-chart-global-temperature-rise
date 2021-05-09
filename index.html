@@ -4,30 +4,79 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src = "https://cdn.jsdelivr.net/npm/chart.js@3.2.1/dist/chart.min.js"></script>
     <title>Document</title>
 </head>
 <body>
+    <canvas id="chart" width = "800px" height = "400px"></canvas> <!-- canvas for chart created with JS below -->
+
     <script>
         // data from https://data.giss.nasa.gov/gistemp/
 
         // THIS IS GETTING RAW DATA FROM A CSV FILE TO THE CONSOLE - GLOBAL YEARS/ TMEPERATURES FROM 1880 - 2020
 
-        getData();  // calling the function which is written below
+        async function getData() { //asynchronous function making asynchronous calls with the await keyword on line 21
 
-        async function getData() { //asynchronous function making asynchronous calls with the await keyword
+            const xs = [];
+            const ys = [];
+
             const response = await fetch('/nasa_info.csv');
             const data = await response.text();
 
-            const table = data.split('\n').slice(1); //data is split by line break, then slice deletes zero element and gives a copy of array from index 1 to the end
+            const table = data.split('\n').slice(1); //tabular data is split by line break, then slice deletes zero element and gives a copy of array from index 1 to the end
             table.forEach(row => { 
                 // forEach is a function that allows the application of something to every element of the array; each element of array represented by the term 'row'
                 // would have also worked with for(let i=0; i<rows.length; i++) ...
                 const columns = row.split(','); // for each row, splitting up by commas
                 const year = columns[0]; // just selects year column
+                xs.push(year); // pushes this data about years to variable xs on line 18
                 const temp = columns[1]; // just selects temperature column
+                ys.push(parseFloat(temp) + 14); //pushes this data about temperatures to variable ys on line 19
+                // problem with 'temp + 14' is that JS doesn't know how to add 14 to a string - every time data is parsed, it is classed as a string.  Solution is parseFloat - changes string to number
                 console.log(year, temp);
             })
+            return { xs, ys }; // getData function is going to return an object with both these arrays (see line 18, 19) then be used in the chartIt function (line 50, 53) 
         }
+    </script>
+
+    <script> // THIS IS USING THE DATA ABOVE TO CREATE A CHART ON THE HTML PAGE
+
+        chartIt(); //calling function written below
+        
+        async function chartIt(){ // has to be async in order to happen after getData function above - gets raw data, then charts it - see 'await getData()' below
+            const data = await getData();  // when chartIt() function is called, it calls the function getData() written above
+            const ctx = document.getElementById('chart').getContext('2d');
+            const myChart = new Chart(ctx, {
+                type: 'line', // could be bar, pie, line
+                data: {
+                    labels: data.xs, // object created in getData function, see line 32 which pushes it to array in line 20
+                    datasets: [{
+                        label: 'Combined Land-Surface Air and Sea-Surface Water Tempterature in °C',
+                        data: data.ys, // this is the data in the 'ys' variable (array on line 21) that getData function created on line 34
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                // includes degrees symbol
+                                callback: function(value, index, values) {
+                                return value + '°';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        };
     </script>
 </body>
 </html>
